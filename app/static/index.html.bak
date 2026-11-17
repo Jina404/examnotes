@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ExamNotes</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
+</head>
+<body>
+<header class="topbar">
+  <h1>📘 ExamNotes</h1>
+  <p class="tagline">Upload lecture notes, get revision notes and likely exam questions.</p>
+</header>
+
+<main>
+  <!-- Privacy notice -->
+  <p class="notice" role="note">
+    ⚠️ Your PDF's text is sent to a third-party AI service for processing.
+    Please don't upload private, confidential or personal documents.
+    Results are deleted after 24 hours.
+  </p>
+
+  <!-- Upload card -->
+  <section class="card" id="upload-card">
+    <div id="dropzone" class="dropzone" tabindex="0" role="button"
+         aria-label="Drop a PDF here or press Enter to choose a file">
+      <p class="dz-icon">📄</p>
+      <p class="dz-main">Drop your lecture notes PDF here</p>
+      <p class="dz-sub">or</p>
+      <button type="button" class="btn" id="attach-btn">Choose a PDF</button>
+      <p class="dz-hint">PDF only · max 20 MB · max 100 pages · text PDFs only (no scans)</p>
+      <input type="file" id="file-input" accept="application/pdf,.pdf" hidden>
+    </div>
+
+    <p id="file-name" class="file-name" hidden></p>
+
+    <div class="controls">
+      <label class="control">
+        <span>Number of questions</span>
+        <input type="number" id="question-count" min="1" max="30" value="10">
+      </label>
+
+      <label class="control">
+        <span>Difficulty</span>
+        <select id="difficulty">
+          <option value="mixed" selected>Mixed</option>
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </label>
+
+      <fieldset class="control types">
+        <legend>Question types</legend>
+        <label><input type="checkbox" class="qtype" value="multiple_choice" checked> Multiple choice</label>
+        <label><input type="checkbox" class="qtype" value="short_answer" checked> Short answer</label>
+        <label><input type="checkbox" class="qtype" value="long_answer" checked> Long answer</label>
+      </fieldset>
+    </div>
+
+    <button class="btn btn-primary btn-wide" id="generate-btn" disabled>
+      Generate notes &amp; questions
+    </button>
+  </section>
+
+  <!-- Loading state -->
+  <section class="card loading" id="loading" hidden>
+    <div class="spinner" aria-hidden="true"></div>
+    <p id="loading-text">Reading your PDF…</p>
+    <p class="dz-hint">This runs while you wait and can take a minute or two for a long PDF.</p>
+  </section>
+
+  <!-- Errors -->
+  <p class="error" id="error" role="alert" hidden></p>
+
+  <!-- Results -->
+  <section id="results" hidden>
+    <div class="result-head">
+      <h2 id="result-title">Your revision pack</h2>
+      <div class="result-actions">
+        <button class="btn btn-small" id="copy-notes">Copy notes</button>
+        <button class="btn btn-small" id="download-md">Download .md</button>
+      </div>
+    </div>
+    <p class="meta" id="result-meta"></p>
+
+    <div class="card">
+      <h3>📝 Notes by topic</h3>
+      <div id="notes"></div>
+    </div>
+
+    <div class="card">
+      <h3>❓ Likely exam questions</h3>
+      <div id="questions"></div>
+    </div>
+
+    <!-- Follow-up chat -->
+    <div class="card">
+      <h3>💬 Ask about this document</h3>
+      <div id="chat-log" class="chat-log"></div>
+      <form id="chat-form" class="chat-form">
+        <input type="text" id="chat-input" maxlength="2000" autocomplete="off"
+               placeholder="e.g. make the notes shorter, or 10 more questions on chapter 3">
+        <button class="btn btn-primary" id="chat-send" type="submit">Send</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- History -->
+  <section class="card" id="history-card" hidden>
+    <div class="result-head">
+      <h3>🕘 Recent documents</h3>
+      <button class="btn btn-small" id="clear-history">Clear</button>
+    </div>
+    <ul id="history-list" class="history"></ul>
+    <p class="dz-hint">Saved in this browser only. Results expire on the server after 24 hours.</p>
+  </section>
+</main>
+
+<footer>
+  <p>ExamNotes — a student project. Always check generated answers against your own notes.</p>
+</footer>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

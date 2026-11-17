@@ -1,0 +1,25 @@
+# Render.com blueprint - deploys ExamNotes on the free instance type.
+# Create the service with "New > Blueprint", point it at this repository,
+# then add LLM_API_KEY in the Render dashboard (Environment tab).
+#
+# Note: free instances have ephemeral disks and sleep after inactivity, so the
+# SQLite cache is lost on restart. That is fine here - it only means a repeat
+# upload is processed again. Add a paid disk if you want it to persist.
+services:
+  - type: web
+    name: examnotes
+    runtime: python
+    plan: free
+    region: frankfurt              # change to your nearest region
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: LLM_PROVIDER
+        value: gemini
+      - key: LLM_MODEL
+        value: gemini-3.6-flash    # keep in step with .env.example
+      - key: LLM_API_KEY
+        sync: false                # set this secret in the dashboard, not in git

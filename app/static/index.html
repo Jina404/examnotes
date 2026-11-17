@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ExamNotes — revision notes and exam questions from your lecture PDFs</title>
+<meta name="description" content="Upload a PDF of lecture notes and get short revision notes grouped by topic plus likely exam questions with model answers.">
+<script>
+  // Set the theme before first paint so the page never flashes the wrong one.
+  try {
+    var t = localStorage.getItem("examnotes.theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.dataset.theme = t;
+  } catch (e) { document.documentElement.dataset.theme = "light"; }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/static/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='3' fill='%23f4f1ea'/><rect x='7' width='2' height='32' fill='%23b23a2e'/><g fill='%231b1a17'><rect x='12' y='8' width='14' height='2'/><rect x='12' y='15' width='14' height='2'/><rect x='12' y='22' width='9' height='2'/></g></svg>">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="/">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <rect class="m-paper" x="0.5" y="0.5" width="31" height="31" rx="2"/>
+        <rect class="m-margin" x="7" y="0.5" width="1.6" height="31"/>
+        <g class="m-lines"><rect x="12" y="8" width="14" height="1.6"/><rect x="12" y="15" width="14" height="1.6"/><rect x="12" y="22" width="9" height="1.6"/></g>
+      </svg>
+    </span>
+    <span class="brand-name">ExamNotes</span>
+  </a>
+  <div class="topbar-right">
+    <span class="pill pill-engine" id="engine-pill" hidden>
+      <span class="dot" aria-hidden="true"></span><span id="engine-name">engine</span>
+    </span>
+    <button class="icon-btn" id="theme-toggle" type="button" title="Switch theme" aria-label="Switch theme">
+      <span class="theme-icon">Night</span>
+    </button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ------------------------------------------------------------ hero -->
+  <section class="hero">
+    <h1>Lecture notes in.<br>Revision notes and<br><span class="marker">exam questions</span> out.</h1>
+    <p class="lede">
+      Drop in a PDF of your lecture slides or handouts. You get short notes grouped
+      by topic and the questions those pages are likely to be examined on, each with
+      a model answer and the page it came from.
+    </p>
+    <ol class="steps">
+      <li><span class="step-n">01</span> Upload a PDF</li>
+      <li><span class="step-n">02</span> Notes by topic</li>
+      <li><span class="step-n">03</span> Questions with answers</li>
+      <li><span class="step-n">04</span> Ask follow-ups</li>
+    </ol>
+  </section>
+
+  <p class="notice" role="note">
+    <span class="notice-label">Note</span>
+    <span>The text of your PDF is sent to a third-party AI service for processing, so
+    don't upload private, confidential or personal documents. The file itself is
+    never stored, and results are deleted after 24&nbsp;hours.</span>
+  </p>
+
+  <!-- ---------------------------------------------------------- upload -->
+  <section class="card" id="upload-card">
+    <div id="dropzone" class="dropzone" tabindex="0" role="button"
+         aria-label="Drop a PDF here or press Enter to choose a file">
+      <p class="dz-icon" aria-hidden="true">
+        <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.4"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16.5 3H7a2 2 0 0 0-2 2v18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9.5Z"/>
+          <path d="M16.5 3v6.5H23"/>
+          <path d="M14 20v-7m0 0-2.6 2.6M14 13l2.6 2.6"/>
+        </svg>
+      </p>
+      <p class="dz-main">Drop your lecture notes PDF here</p>
+      <p class="dz-sub">or</p>
+      <button type="button" class="btn" id="attach-btn">Choose a file</button>
+      <p class="dz-hint" id="limits-hint">PDF only · max 20 MB · max 100 pages · text PDFs, not scans</p>
+      <input type="file" id="file-input" accept="application/pdf,.pdf" hidden>
+    </div>
+
+    <p id="file-name" class="file-name" hidden></p>
+
+    <div class="controls">
+      <label class="control">
+        <span class="control-label">Number of questions</span>
+        <input type="number" id="question-count" min="1" max="30" value="10">
+      </label>
+
+      <label class="control">
+        <span class="control-label">Difficulty</span>
+        <div class="select-wrap">
+          <select id="difficulty">
+            <option value="mixed" selected>Mixed</option>
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </div>
+      </label>
+
+      <fieldset class="control types">
+        <legend class="control-label">Question types</legend>
+        <div class="toggle-row">
+          <label class="toggle"><input type="checkbox" class="qtype" value="multiple_choice" checked><span>Multiple choice</span></label>
+          <label class="toggle"><input type="checkbox" class="qtype" value="short_answer" checked><span>Short answer</span></label>
+          <label class="toggle"><input type="checkbox" class="qtype" value="long_answer" checked><span>Long answer</span></label>
+        </div>
+      </fieldset>
+    </div>
+
+    <button class="btn btn-primary btn-wide" id="generate-btn" disabled>
+      Generate notes &amp; questions
+    </button>
+  </section>
+
+  <!-- --------------------------------------------------------- loading -->
+  <section class="card loading" id="loading" hidden>
+    <div class="spinner" aria-hidden="true"></div>
+    <p id="loading-text">Reading your PDF…</p>
+    <div class="bar" aria-hidden="true"><span></span></div>
+    <p class="dz-hint">This runs while you wait and can take a minute or two for a long PDF.</p>
+  </section>
+
+  <p class="error" id="error" role="alert" hidden></p>
+
+  <!-- --------------------------------------------------------- results -->
+  <section id="results" hidden>
+    <div class="result-head">
+      <div>
+        <h2 id="result-title">Your revision pack</h2>
+        <p class="meta" id="result-meta"></p>
+      </div>
+      <div class="result-actions">
+        <button class="btn btn-small" id="copy-notes">Copy notes</button>
+        <button class="btn btn-small btn-primary" id="download-md">Download .md</button>
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Revision pack sections">
+      <button class="tab is-active" role="tab" data-panel="panel-notes" aria-selected="true">Notes</button>
+      <button class="tab" role="tab" data-panel="panel-questions" aria-selected="false">Questions</button>
+      <button class="tab" role="tab" data-panel="panel-chat" aria-selected="false">Ask</button>
+    </div>
+
+    <div class="card panel is-active" id="panel-notes" role="tabpanel">
+      <h3>Notes by topic</h3>
+      <div id="notes"></div>
+    </div>
+
+    <div class="card panel" id="panel-questions" role="tabpanel">
+      <h3>Likely exam questions</h3>
+      <div id="questions"></div>
+    </div>
+
+    <div class="card panel" id="panel-chat" role="tabpanel">
+      <h3>Ask about this document</h3>
+      <div id="chat-log" class="chat-log"></div>
+      <form id="chat-form" class="chat-form">
+        <input type="text" id="chat-input" maxlength="2000" autocomplete="off"
+               placeholder="Make the notes shorter · 10 more questions on chapter 3">
+        <button class="btn btn-primary" id="chat-send" type="submit">Send</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- --------------------------------------------------------- history -->
+  <section class="card" id="history-card" hidden>
+    <div class="result-head">
+      <h3>Recent documents</h3>
+      <button class="btn btn-small" id="clear-history">Clear</button>
+    </div>
+    <ul id="history-list" class="history"></ul>
+    <p class="dz-hint">Saved in this browser only. Results expire on the server after 24 hours.</p>
+  </section>
+
+</main>
+
+<footer>
+  <p>ExamNotes — a university project. Generated answers can be wrong: check them against your own notes.</p>
+</footer>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
